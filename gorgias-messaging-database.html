@@ -1,0 +1,2173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gorgias Messaging Database</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gorgias-coral: #FF9780;
+    --gorgias-coral-dark: #FF6D62;
+    --gorgias-black: #070707;
+    --gorgias-cream: #FFF9F4;
+    --gorgias-peach-light: #FDF3EF;
+    --gorgias-peach: #FFD5C7;
+    --gorgias-peach-deep: #FFBCA7;
+    --gorgias-peach-muted: #F6DDD3;
+    --gorgias-green: #1A9970;
+    --gray-50: #FAFAFA;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-400: #9CA3AF;
+    --gray-500: #6B7280;
+    --gray-600: #4B5563;
+    --gray-700: #374151;
+    --gray-800: #1F2937;
+    --gray-900: #111827;
+    --radius: 0.625rem;
+    --radius-lg: 1rem;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md: 0 4px 6px rgba(0,0,0,.06), 0 2px 4px rgba(0,0,0,.04);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,.08), 0 4px 6px rgba(0,0,0,.04);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, Helvetica, sans-serif;
+    background: var(--gorgias-cream);
+    color: var(--gorgias-black);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Header */
+  .header {
+    background: var(--gorgias-black);
+    color: white;
+    padding: 32px 40px 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .header h1 {
+    font-family: 'Inter Tight', 'Inter', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .header h1 span { color: var(--gorgias-coral); }
+  .header-meta {
+    font-size: 13px;
+    opacity: 0.55;
+  }
+  .header-subtitle {
+    font-size: 14px;
+    opacity: 0.7;
+    max-width: 600px;
+  }
+  .stats-bar {
+    display: flex;
+    gap: 24px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .stat { font-size: 13px; opacity: 0.6; }
+  .stat strong { color: var(--gorgias-coral); font-size: 18px; display: block; opacity: 1; }
+
+  /* Search & Filters */
+  .controls {
+    padding: 20px 40px;
+    background: white;
+    border-bottom: 1px solid var(--gray-200);
+    position: sticky;
+    top: 130px;
+    z-index: 99;
+    box-shadow: var(--shadow-sm);
+  }
+  .search-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+  .search-input {
+    flex: 1;
+    padding: 10px 16px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius);
+    font-size: 14px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .search-input:focus { border-color: var(--gorgias-black); box-shadow: 0 0 0 3px rgba(255,151,128,.15); }
+
+  .copy-all-btn {
+    padding: 10px 20px;
+    background: var(--gorgias-black);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .2s;
+  }
+  .copy-all-btn:hover { background: var(--gorgias-coral); color: var(--gorgias-black); }
+
+  .filter-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-group { display: flex; align-items: center; gap: 6px; }
+  .filter-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-500);
+  }
+  .filter-select {
+    padding: 7px 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius);
+    font-size: 13px;
+    background: white;
+    color: var(--gray-700);
+    cursor: pointer;
+    outline: none;
+  }
+  .filter-select:focus { border-color: var(--gorgias-black); }
+  .clear-btn {
+    padding: 7px 14px;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius);
+    font-size: 12px;
+    color: var(--gray-600);
+    cursor: pointer;
+    margin-left: auto;
+  }
+  .clear-btn:hover { background: var(--gray-200); }
+
+  /* Cards Grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 20px;
+    padding: 28px 40px 60px;
+  }
+
+  .card {
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--gray-200);
+    overflow: hidden;
+    transition: box-shadow .2s, transform .15s;
+    display: flex;
+    flex-direction: column;
+  }
+  .card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+  .card-header {
+    padding: 16px 20px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .tag-pillar { background: var(--gorgias-peach-light); color: #99402E; }
+  .tag-persona { background: #E8F4F0; color: #0E5C44; }
+  .tag-product { background: #F0F0F0; color: var(--gorgias-black); }
+  .tag-type-tagline { background: var(--gorgias-peach); color: #7A2E1A; }
+  .tag-type-valueprop { background: #FFE8DD; color: #8C3A20; }
+  .tag-type-proofpoint { background: #E0EDEA; color: #0E5C44; }
+  .tag-type-objection { background: #FDEAE6; color: #991B1B; }
+  .tag-type-cta { background: #D6F0E8; color: #0C4D38; }
+  .tag-segment-enterprise { background: var(--gorgias-black); color: white; }
+  .tag-segment-smb { background: var(--gorgias-coral); color: var(--gorgias-black); }
+  .tag-segment-all { background: #E8F4F0; color: #0E5C44; }
+
+  .card-copy-btn {
+    padding: 4px 10px;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    font-size: 11px;
+    color: var(--gray-500);
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all .15s;
+  }
+  .card-copy-btn:hover { background: var(--gorgias-black); color: white; border-color: var(--gorgias-black); }
+  .card-copy-btn.copied { background: var(--gorgias-green); color: white; border-color: var(--gorgias-green); }
+
+  .card-body { padding: 0 20px 16px; flex: 1; }
+  .card-headline {
+    font-family: 'Inter Tight', 'Inter', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--gorgias-black);
+    line-height: 1.35;
+    margin-bottom: 8px;
+  }
+  .card-supporting {
+    font-size: 14px;
+    color: var(--gray-600);
+    line-height: 1.55;
+    margin-bottom: 12px;
+  }
+
+  .card-meta {
+    padding: 12px 20px;
+    background: var(--gorgias-cream);
+    border-top: 1px solid var(--gorgias-peach-light);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .meta-item { font-size: 12px; }
+  .meta-label { font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.3px; font-size: 10px; display: block; margin-bottom: 2px; }
+  .meta-value { color: var(--gray-700); }
+
+  .card-proof {
+    padding: 10px 20px;
+    border-top: 1px solid var(--gray-100);
+    font-size: 12px;
+    color: var(--gray-500);
+  }
+  .card-proof strong { color: var(--gray-600); }
+
+  /* Empty state */
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--gray-400);
+  }
+  .empty-state h3 { font-family: 'Inter Tight', 'Inter', sans-serif; font-size: 18px; margin-bottom: 8px; color: var(--gray-500); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--gorgias-black);
+    color: white;
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all .3s ease;
+    z-index: 200;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: 1fr; padding: 20px; }
+    .header, .controls { padding-left: 20px; padding-right: 20px; }
+    .filter-row { flex-direction: column; align-items: stretch; }
+    .filter-group { justify-content: space-between; }
+    .clear-btn { margin-left: 0; }
+  }
+
+  /* Print styles */
+  @media print {
+    .header { position: relative; }
+    .controls { position: relative; display: none; }
+    .card { break-inside: avoid; }
+    .card-copy-btn, .copy-all-btn { display: none; }
+    .chat-fab, .chat-panel { display: none; }
+  }
+
+  /* ============ CHAT ASSISTANT ============ */
+  .chat-fab {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--gorgias-black);
+    color: white;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(7,7,7,.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    transition: transform .2s, box-shadow .2s, background .2s;
+  }
+  .chat-fab:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(7,7,7,.4); background: var(--gorgias-coral); color: var(--gorgias-black); }
+  .chat-fab svg { width: 26px; height: 26px; transition: transform .25s; }
+  .chat-fab.open svg { transform: rotate(90deg); }
+
+  .chat-panel {
+    position: fixed;
+    bottom: 96px;
+    right: 28px;
+    width: 420px;
+    max-height: 600px;
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 12px 40px rgba(7,7,7,.15);
+    display: flex;
+    flex-direction: column;
+    z-index: 299;
+    opacity: 0;
+    transform: translateY(16px) scale(.96);
+    pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+    overflow: hidden;
+  }
+  .chat-panel.open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  .chat-header {
+    background: var(--gorgias-black);
+    color: white;
+    padding: 18px 20px;
+    flex-shrink: 0;
+  }
+  .chat-header h3 { font-family: 'Inter Tight', 'Inter', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+  .chat-header p { font-size: 12px; opacity: .55; }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 280px;
+    max-height: 400px;
+  }
+
+  .chat-msg {
+    max-width: 88%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.55;
+    animation: chatIn .25s ease;
+  }
+  @keyframes chatIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .chat-msg.bot {
+    align-self: flex-start;
+    background: var(--gorgias-peach-light);
+    color: var(--gorgias-black);
+    border-bottom-left-radius: 4px;
+  }
+  .chat-msg.user {
+    align-self: flex-end;
+    background: var(--gorgias-black);
+    color: white;
+    border-bottom-right-radius: 4px;
+  }
+  .chat-msg .msg-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 4px;
+    opacity: .6;
+  }
+  .chat-msg.bot .msg-label { color: var(--gorgias-coral-dark); opacity: 1; }
+
+  .chat-result-card {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-top: 8px;
+    cursor: pointer;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .chat-result-card:hover { border-color: var(--gorgias-coral); box-shadow: 0 2px 8px rgba(255,151,128,.18); }
+  .chat-result-headline {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 4px;
+  }
+  .chat-result-supporting {
+    font-size: 12px;
+    color: var(--gray-500);
+    line-height: 1.45;
+  }
+  .chat-result-meta {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .chat-result-tag {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .chat-result-copy {
+    font-size: 11px;
+    color: var(--gorgias-coral-dark);
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: 6px;
+    display: inline-block;
+  }
+  .chat-result-copy:hover { text-decoration: underline; }
+
+  .chat-suggestions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .chat-suggestion {
+    font-size: 11px;
+    padding: 5px 10px;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 20px;
+    cursor: pointer;
+    color: var(--gorgias-black);
+    font-weight: 500;
+    transition: all .15s;
+  }
+  .chat-suggestion:hover { background: var(--gorgias-black); color: white; border-color: var(--gorgias-black); }
+
+  .chat-input-row {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--gray-200);
+    background: var(--gray-50);
+    flex-shrink: 0;
+  }
+  .chat-input {
+    flex: 1;
+    padding: 9px 14px;
+    border: 1px solid var(--gray-300);
+    border-radius: 20px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .chat-input:focus { border-color: var(--gorgias-black); }
+  .chat-send {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--gorgias-black);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all .15s;
+  }
+  .chat-send:hover { background: var(--gorgias-coral); color: var(--gorgias-black); }
+  .chat-send svg { width: 16px; height: 16px; }
+
+  .typing-dots { display: inline-flex; gap: 4px; padding: 4px 0; }
+  .typing-dots span {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gray-400);
+    animation: dotPulse .8s ease-in-out infinite;
+  }
+  .typing-dots span:nth-child(2) { animation-delay: .15s; }
+  .typing-dots span:nth-child(3) { animation-delay: .3s; }
+  @keyframes dotPulse {
+    0%, 80%, 100% { transform: scale(.6); opacity: .4; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  @media (max-width: 500px) {
+    .chat-panel { width: calc(100vw - 24px); right: 12px; bottom: 80px; }
+    .chat-fab { bottom: 16px; right: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1>Gorgias <span>Messaging Database</span></h1>
+      <p class="header-subtitle">Approved messaging for every team, persona, and use case. Find it, filter it, copy it.</p>
+    </div>
+    <div class="header-meta">
+      Owner: PMM &middot; Updated March 2026<br>
+      Do NOT edit &mdash; request changes via PMM
+    </div>
+  </div>
+  <div class="stats-bar">
+    <div class="stat"><strong id="total-count">0</strong>Total messages</div>
+    <div class="stat"><strong id="visible-count">0</strong>Showing</div>
+    <div class="stat"><strong>4</strong>Pillars</div>
+    <div class="stat"><strong>13</strong>Personas</div>
+    <div class="stat"><strong>5</strong>Products</div>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="search-row">
+    <input type="text" class="search-input" id="search" placeholder="Search headlines, copy, personas, proof points...">
+    <button class="copy-all-btn" onclick="copyVisible()">Copy all visible</button>
+  </div>
+  <div class="filter-row">
+    <div class="filter-group">
+      <span class="filter-label">Pillar</span>
+      <select class="filter-select" id="filter-pillar">
+        <option value="">All Pillars</option>
+        <option value="conversations-drive-sales">Win with conversations that drive sales</option>
+        <option value="high-quality">Win with high-quality conversations</option>
+        <option value="scale-efficiently">Win by scaling efficiently</option>
+        <option value="one-platform">Win with one platform</option>
+        <option value="platform-level">Platform-level</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Persona</span>
+      <select class="filter-select" id="filter-persona">
+        <option value="">All Personas</option>
+        <optgroup label="Enterprise / Mid-Market">
+          <option value="ceo-enterprise">CEO (Enterprise)</option>
+          <option value="cio">CIO / VP IT</option>
+          <option value="cfo">CFO / VP Finance</option>
+          <option value="vp-cx">VP of CX / Operations</option>
+          <option value="support-director">Support Director / Manager</option>
+          <option value="support-agent">Support Agent</option>
+          <option value="vp-ecommerce">VP of Ecommerce / Digital</option>
+          <option value="ecommerce-manager">Ecommerce Manager</option>
+        </optgroup>
+        <optgroup label="SMB">
+          <option value="ceo-smb">CEO / Founder (SMB)</option>
+          <option value="support-manager-smb">Support Manager / Agent (SMB)</option>
+          <option value="head-ecommerce-smb">Head of Ecommerce (SMB)</option>
+        </optgroup>
+        <optgroup label="Adjacent">
+          <option value="marketing-manager">CRM / Retention Marketing Manager</option>
+          <option value="ecommerce-cx-manager">Ecommerce & CX Manager</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Product</span>
+      <select class="filter-select" id="filter-product">
+        <option value="">All Products</option>
+        <option value="helpdesk">Helpdesk</option>
+        <option value="ai-agent">AI Agent</option>
+        <option value="voice">Voice</option>
+        <option value="engage">Gorgias Engage</option>
+        <option value="platform">Platform / Multi-product</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Type</span>
+      <select class="filter-select" id="filter-type">
+        <option value="">All Types</option>
+        <option value="tagline">Tagline</option>
+        <option value="value-prop">Value Prop</option>
+        <option value="proof-point">Proof Point</option>
+        <option value="objection-handler">Objection Handler</option>
+        <option value="cta">CTA</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Use case</span>
+      <select class="filter-select" id="filter-usecase">
+        <option value="">All Use Cases</option>
+        <option value="event">Event (booth, speaking, sponsorship)</option>
+        <option value="outbound">Outbound (email, ads, DG)</option>
+        <option value="sales">Sales (deck, call, demo)</option>
+        <option value="partnership">Partnership (co-marketing, integration)</option>
+        <option value="cx-internal">CX / Internal enablement</option>
+      </select>
+    </div>
+    <button class="clear-btn" onclick="clearFilters()">Clear all</button>
+  </div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="toast" id="toast">Copied to clipboard</div>
+
+<script>
+const MESSAGES = [
+  // ============================================================
+  // PLATFORM-LEVEL MESSAGING
+  // ============================================================
+  {
+    headline: "The Conversational Commerce platform for Shopify brands.",
+    supporting: "Connect with shoppers 1:1 across the entire journey to drive conversions, scale support, and maximize lifetime value.",
+    pillar: "platform-level",
+    persona: "all",
+    segment: "all",
+    product: "platform",
+    type: "tagline",
+    usecase: "event",
+    whenToUse: "Booth signage, event banners, keynote decks, sponsorship materials. The default tagline for any Gorgias-branded moment.",
+    proofPoints: ["15,000+ ecommerce brands on Gorgias", "Shopify-native with 100+ integrations"]
+  },
+  {
+    headline: "Where every conversation drives commerce.",
+    supporting: "Discovery, purchase, and support are merging into one continuous, conversational experience. Gorgias gives brands the platform to own it.",
+    pillar: "platform-level",
+    persona: "all",
+    segment: "all",
+    product: "platform",
+    type: "tagline",
+    usecase: "event",
+    whenToUse: "Event keynotes, thought leadership panels, brand awareness campaigns. Best when establishing category narrative.",
+    proofPoints: ["Harley Finkelstein: 'A new way to sell is coming  -  conversation-driven.'", "Conversational Commerce search trend rising 6mo ahead of platform adoption"]
+  },
+  {
+    headline: "Brands that win the conversation, win the customer.",
+    supporting: "The brands pulling ahead aren't just answering tickets  -  they're selling, supporting, and re-engaging through 1:1 conversations that build loyalty and drive lifetime value.",
+    pillar: "platform-level",
+    persona: "all",
+    segment: "all",
+    product: "platform",
+    type: "tagline",
+    usecase: "event",
+    whenToUse: "Event keynotes, booth headlines, brand awareness campaigns. Strong opening line that frames the competitive narrative.",
+    proofPoints: ["15,000+ ecommerce brands on Gorgias", "Conversational Commerce is the fastest-growing category in ecommerce CX"]
+  },
+  {
+    headline: "Conversations that drive revenue, not just resolutions.",
+    supporting: "Gorgias turns every customer interaction into a commerce opportunity  -  from pre-sale product guidance to post-purchase re-engagement. Support stops being a cost center.",
+    pillar: "conversations-drive-sales",
+    persona: "all",
+    segment: "all",
+    product: "platform",
+    type: "tagline",
+    usecase: "event",
+    whenToUse: "Event booth, sales decks, outbound campaigns. Use when you need to reframe what 'support' means  -  revenue, not just CSAT.",
+    proofPoints: ["Revenue attribution dashboard tracks support-driven sales", "AI Agent increases sales by 2% via Shopping Assistant"]
+  },
+  {
+    headline: "Your partner in conversational commerce.",
+    supporting: "Gorgias gives ecommerce brands the platform, the AI, and the integrations to own every customer conversation  -  from first click to repeat purchase.",
+    pillar: "platform-level",
+    persona: "all",
+    segment: "all",
+    product: "platform",
+    type: "tagline",
+    usecase: "partnership",
+    whenToUse: "Co-marketing, partner directories, sponsorship taglines, event signage. Softer, partnership-oriented positioning.",
+    proofPoints: ["Shopify-native with 100+ integrations", "Deep integrations with Klaviyo, Loop, Recharge, Attentive"]
+  },
+  {
+    headline: "One AI. Every conversation. More revenue.",
+    supporting: "From first question to repeat purchase, Gorgias turns shoppers into buyers and buyers into loyal customers  -  all through 1:1 conversation.",
+    pillar: "platform-level",
+    persona: "all",
+    segment: "all",
+    product: "ai-agent",
+    type: "tagline",
+    usecase: "event",
+    whenToUse: "Event booth headlines, digital ads, landing page heroes. Short-form brand messaging.",
+    proofPoints: ["Resolve up to 60% of pre- and post-sale questions", "Increase sales by 2% via Shopping Assistant"]
+  },
+  {
+    headline: "AI is changing how customers shop. Brands that sell and support through conversation will win.",
+    supporting: "Consumers use AI to discover, compare, and buy. Shopify is integrating with ChatGPT. Discovery, decision, and purchase are converging into a single conversational experience.",
+    pillar: "platform-level",
+    persona: "ceo-enterprise",
+    segment: "enterprise",
+    product: "platform",
+    type: "value-prop",
+    usecase: "sales",
+    whenToUse: "Opening a strategic sales conversation with C-level buyers. Sets the market context before product pitch.",
+    proofPoints: ["Shopify x ChatGPT integration", "Harley Finkelstein quote on conversation-driven selling"]
+  },
+  {
+    headline: "Support is no longer a cost center. It's your next revenue channel.",
+    supporting: "Gorgias transforms customer interactions into commerce opportunities  -  from product recommendations to chat-to-checkout to proactive re-engagement.",
+    pillar: "platform-level",
+    persona: "cfo",
+    segment: "enterprise",
+    product: "platform",
+    type: "value-prop",
+    usecase: "sales",
+    whenToUse: "CFO/finance conversations about ROI justification. Also strong for exec-facing decks.",
+    proofPoints: ["Revenue attribution dashboard tracks support-driven sales", "Brands see measurable AOV lift from in-chat product recommendations"]
+  },
+  {
+    headline: "Stop stitching tools together. Start driving revenue from every conversation.",
+    supporting: "Gorgias replaces fragmented helpdesks, chatbots, and outbound tools with one Conversational Commerce platform  -  natively built for Shopify.",
+    pillar: "platform-level",
+    persona: "vp-cx",
+    segment: "enterprise",
+    product: "platform",
+    type: "value-prop",
+    usecase: "outbound",
+    whenToUse: "Outbound emails and ads targeting VP CX / Ops leaders frustrated with tool sprawl.",
+    proofPoints: ["Deep integrations with Klaviyo, Loop, Recharge, Attentive", "Unified inbox across email, chat, social, SMS, phone"]
+  },
+
+  // ============================================================
+  // PILLAR 1: WIN WITH CONVERSATIONS THAT DRIVE SALES
+  // ============================================================
+  {
+    headline: "Turn every conversation into a sales opportunity.",
+    supporting: "Product recommendations, dynamic discounts, chat-to-checkout, cross-sell and upsell  -  all happening inside the conversation, at the moment of highest intent.",
+    pillar: "conversations-drive-sales",
+    persona: "vp-ecommerce",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "tagline",
+    usecase: "event",
+    whenToUse: "Event booths targeting ecommerce leaders. Also works for sales decks focused on revenue outcomes.",
+    proofPoints: ["Bare Minerals case study", "Shopping Assistant drives product recs, dynamic discounts, chat-to-checkout"]
+  },
+  {
+    headline: "Your AI shopping assistant that converts browsers into buyers.",
+    supporting: "Guide shoppers to the right products in real time  -  based on what they're looking for, not what they type into search. Conversation replaces guesswork.",
+    pillar: "conversations-drive-sales",
+    persona: "ecommerce-manager",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "value-prop",
+    usecase: "outbound",
+    whenToUse: "DG campaigns targeting ecommerce managers focused on conversion rate optimization.",
+    proofPoints: ["AI-powered product recommendations using browsing history and preferences", "Exit intent campaigns trigger at abandonment signals"]
+  },
+  {
+    headline: "Increase order value without increasing ad spend.",
+    supporting: "AI Agent recommends complementary products, suggests upgrades, and delivers targeted discounts at exactly the right moment  -  inside the conversation.",
+    pillar: "conversations-drive-sales",
+    persona: "ceo-enterprise",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "value-prop",
+    usecase: "sales",
+    whenToUse: "Sales conversations with CEOs focused on growth and profitability without scaling costs.",
+    proofPoints: ["Cross-sell, upsell & bundling capabilities", "PDP in chat conversations for instant product discovery"]
+  },
+  {
+    headline: "We'll adopt AI if it drives measurable impact  -  higher conversion, bigger basket sizes, real revenue lift.",
+    supporting: "That's exactly what Gorgias delivers. Shopping Assistant converts browsers into buyers with real-time product recs, and you can track every dollar back to the conversation.",
+    pillar: "conversations-drive-sales",
+    persona: "vp-ecommerce",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "objection-handler",
+    usecase: "sales",
+    whenToUse: "When VP Ecommerce pushes back on AI ROI. Reflect their language, then prove the outcome.",
+    proofPoints: ["Revenue statistics track conversions and AOV from support interactions", "Bare Minerals case study"]
+  },
+  {
+    headline: "See how brands turn chat into their fastest-growing sales channel.",
+    supporting: "Book a demo to see Shopping Assistant, chat-to-checkout, and AI-powered product recommendations in action.",
+    pillar: "conversations-drive-sales",
+    persona: "vp-ecommerce",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "cta",
+    usecase: "outbound",
+    whenToUse: "Email CTA, landing page CTA, event follow-up CTA. Pair with Pillar 1 value props.",
+    proofPoints: []
+  },
+  {
+    headline: "Lower CAC by turning support into a sales engine.",
+    supporting: "When every customer conversation is an opportunity to recommend, upsell, and re-engage, you spend less acquiring and more retaining.",
+    pillar: "conversations-drive-sales",
+    persona: "ceo-smb",
+    segment: "smb",
+    product: "platform",
+    type: "value-prop",
+    usecase: "outbound",
+    whenToUse: "SMB outbound targeting founders worried about rising CAC and thin margins.",
+    proofPoints: ["Retention-driven revenue reduces paid acquisition costs", "AI Agent handles recs without adding headcount"]
+  },
+  {
+    headline: "Bring customers back  -  with true 1:1 personalized outreach.",
+    supporting: "Smart, automated re-engagement that turns post-purchase interactions into repeat revenue. Restock reminders, new product drops, win-back flows  -  all conversational.",
+    pillar: "conversations-drive-sales",
+    persona: "marketing-manager",
+    segment: "all",
+    product: "engage",
+    type: "value-prop",
+    usecase: "partnership",
+    whenToUse: "Co-marketing with Klaviyo, Attentive, or SMS partners. Also strong for retention-focused DG campaigns.",
+    proofPoints: ["AI Journeys automates follow-up based on shopper behavior", "Orchestration across chat, email, and SMS"]
+  },
+  {
+    headline: "Convert hesitant shoppers before they bounce.",
+    supporting: "AI Agent reassures buyers with real-time comparisons, sizing guidance, policy explanations, and context-aware discounts  -  right when they're about to leave.",
+    pillar: "conversations-drive-sales",
+    persona: "head-ecommerce-smb",
+    segment: "smb",
+    product: "ai-agent",
+    type: "value-prop",
+    usecase: "sales",
+    whenToUse: "Sales conversations with SMB ecommerce leads focused on reducing bounce and cart abandonment.",
+    proofPoints: ["Exit intent campaigns trigger at abandonment signals", "Context-aware discount delivery at moment of highest intent"]
+  },
+  {
+    headline: "Ads to conversations. Clicks to customers.",
+    supporting: "Route paid traffic directly into a conversation with AI Agent. Shoppers get instant, personalized help  -  not a static landing page.",
+    pillar: "conversations-drive-sales",
+    persona: "ecommerce-manager",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "value-prop",
+    usecase: "partnership",
+    whenToUse: "Co-marketing with ad platforms, agency partnerships. Also works for DG targeting performance marketers.",
+    proofPoints: ["Ads-to-conversation feature", "Proactive engagement intercepts visitors before they leave"]
+  },
+
+  // ============================================================
+  // PILLAR 2: WIN WITH HIGH-QUALITY CONVERSATIONS
+  // ============================================================
+  {
+    headline: "AI that learns your brand. Agents that keep getting better.",
+    supporting: "Combine human intelligence with AI that knows your tone, your products, and your SOPs  -  delivering faster, more accurate, more personal responses while coaching your team to improve.",
+    pillar: "high-quality",
+    persona: "support-director",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "tagline",
+    usecase: "event",
+    whenToUse: "Event messaging targeting CX leaders. Strong for booth demos focused on AI quality and brand control.",
+    proofPoints: ["Caitlyn Minimalist case study", "Brand center, guidance, AI coaching tips, quality scoring"]
+  },
+  {
+    headline: "Enterprise-grade control over every AI conversation.",
+    supporting: "Centralize knowledge, enforce brand tone, set guardrails, and monitor AI performance  -  all from one control plane. Your brand voice, everywhere.",
+    pillar: "high-quality",
+    persona: "cio",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "value-prop",
+    usecase: "sales",
+    whenToUse: "IT validation stage of enterprise deals. CIO needs confidence in accuracy, control, and compliance.",
+    proofPoints: ["Enterprise-grade control features", "Multi-store / markets support", "Centralized knowledge base + brand center"]
+  },
+  {
+    headline: "We need confidence in AI accuracy before going all in.",
+    supporting: "That's why Gorgias gives you full control: brand center defines tone, guidance enforces SOPs, quality scoring monitors every response, and AI coaching tips improve accuracy over time.",
+    pillar: "high-quality",
+    persona: "vp-cx",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "objection-handler",
+    usecase: "sales",
+    whenToUse: "When VP CX/Ops is cautious about AI quality. Acknowledge the concern, then walk through the control stack.",
+    proofPoints: ["Brand center (tone of voice)", "Guidance (SOP adherence)", "Quality scoring", "AI coaching tips"]
+  },
+  {
+    headline: "Your brand voice, perfectly replicated at scale.",
+    supporting: "Brand center trains AI on your tone. Guidance ensures every response follows your SOPs. Quality scoring catches drift before customers do.",
+    pillar: "high-quality",
+    persona: "support-director",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "value-prop",
+    usecase: "outbound",
+    whenToUse: "DG emails targeting support directors who worry about brand consistency as they automate.",
+    proofPoints: ["Caitlyn Minimalist case study", "AI coaching tips improve accuracy over time"]
+  },
+  {
+    headline: "Stop choosing between speed and quality.",
+    supporting: "Gorgias AI delivers both: instant responses that sound like your best agent wrote them, with continuous coaching to keep your team leveling up.",
+    pillar: "high-quality",
+    persona: "support-manager-smb",
+    segment: "smb",
+    product: "ai-agent",
+    type: "value-prop",
+    usecase: "outbound",
+    whenToUse: "SMB outbound for support managers evaluating AI tools. They want quality without complexity.",
+    proofPoints: ["AI coaching tips for agents", "Brand center ensures on-brand responses"]
+  },
+  {
+    headline: "See how AI coaching turns your team into your competitive edge.",
+    supporting: "Book a demo to see quality scoring, AI coaching tips, and brand center in action.",
+    pillar: "high-quality",
+    persona: "support-director",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "cta",
+    usecase: "outbound",
+    whenToUse: "CTA for Pillar 2 campaigns targeting CX leaders.",
+    proofPoints: []
+  },
+  {
+    headline: "AI you can trust with your customers.",
+    supporting: "Monitor every AI response, set guardrails for sensitive topics, and maintain full visibility into what AI says on your behalf. No black boxes.",
+    pillar: "high-quality",
+    persona: "ceo-enterprise",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "value-prop",
+    usecase: "sales",
+    whenToUse: "CEO or CIO conversations where AI trust and risk mitigation are the primary concern.",
+    proofPoints: ["Enterprise-grade control", "Monitor AI performance", "Centralized knowledge management"]
+  },
+  {
+    headline: "Train once, deploy everywhere.",
+    supporting: "Centralize your product knowledge, brand voice, and policies in one place. AI Agent uses that knowledge across every channel  -  chat, email, social, SMS, and phone.",
+    pillar: "high-quality",
+    persona: "support-manager-smb",
+    segment: "smb",
+    product: "ai-agent",
+    type: "value-prop",
+    usecase: "sales",
+    whenToUse: "SMB demos where the buyer wants simplicity. One setup, consistent output everywhere.",
+    proofPoints: ["Centralized knowledge base", "Omnichannel deployment"]
+  },
+
+  // ============================================================
+  // PILLAR 3: WIN BY SCALING EFFICIENTLY
+  // ============================================================
+  {
+    headline: "Automate 60%+ of support. Zero compromise on quality.",
+    supporting: "AI Agent handles repetitive inquiries instantly. Agents focus on complex, high-value conversations. Your team scales without your headcount ballooning.",
+    pillar: "scale-efficiently",
+    persona: "vp-cx",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "tagline",
+    usecase: "event",
+    whenToUse: "Event booth headline, sponsorship materials, sales deck hero slides  -  whenever efficiency is the lead story.",
+    proofPoints: ["Trove Brands case study", "60%+ automation rate", "AI Agent for Support + robust rules and macros"]
+  },
+  {
+    headline: "Handle 3x the volume without 3x the headcount.",
+    supporting: "Gorgias automates repetitive tasks, routes intelligently, and gives agents the context to resolve faster  -  so you grow without adding cost linearly.",
+    pillar: "scale-efficiently",
+    persona: "cfo",
+    segment: "enterprise",
+    product: "platform",
+    type: "value-prop",
+    usecase: "sales",
+    whenToUse: "CFO/finance conversations focused on unit economics and cost-per-ticket reduction.",
+    proofPoints: ["Reduce support costs by 40-60% while maintaining CSAT", "Scalable from 10 to 10,000+ tickets/month"]
+  },
+  {
+    headline: "Scale support without scaling spend.",
+    supporting: "AI Agent resolves repetitive tickets instantly. Rules and macros automate routing and tagging. Your team handles more with less  -  and customers never notice.",
+    pillar: "scale-efficiently",
+    persona: "ceo-smb",
+    segment: "smb",
+    product: "ai-agent",
+    type: "value-prop",
+    usecase: "outbound",
+    whenToUse: "SMB outbound emails targeting founders who need to stay lean while growing.",
+    proofPoints: ["Trove Brands case study", "Intent and sentiment detection for smart routing"]
+  },
+  {
+    headline: "We're piloting AI, but we're still evaluating if it actually makes the team more productive.",
+    supporting: "Fair. Here's what makes Gorgias different: we don't just deflect tickets  -  we resolve them. Track automation rate, time saved, and cost-per-ticket in one dashboard to prove impact in weeks, not quarters.",
+    pillar: "scale-efficiently",
+    persona: "support-director",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "objection-handler",
+    usecase: "sales",
+    whenToUse: "When support directors are in evaluation mode. Ground the conversation in measurable outcomes.",
+    proofPoints: ["Automation rate tracking", "Unit economics dashboard", "AI x Human collaboration model"]
+  },
+  {
+    headline: "Free your agents from ticket triage. Let them do work that matters.",
+    supporting: "AI handles the repetitive 60%. Agents get the complex, high-value conversations that build loyalty and drive revenue.",
+    pillar: "scale-efficiently",
+    persona: "support-agent",
+    segment: "all",
+    product: "ai-agent",
+    type: "value-prop",
+    usecase: "cx-internal",
+    whenToUse: "Internal enablement for CX teams. Change management messaging to help agents see AI as a tool, not a threat.",
+    proofPoints: ["AI x Human Collaboration model", "AI Co-pilot assists agents on complex tickets"]
+  },
+  {
+    headline: "We're worried AI could replace us. Is it here to help or take over?",
+    supporting: "AI handles the repetitive stuff  -  tracking numbers, return policies, FAQs. You get more time for the conversations that actually need a human: complex issues, VIP customers, relationship-building. It's a career upgrade, not a replacement.",
+    pillar: "scale-efficiently",
+    persona: "support-agent",
+    segment: "all",
+    product: "ai-agent",
+    type: "objection-handler",
+    usecase: "cx-internal",
+    whenToUse: "Agent-facing change management. Town halls, internal comms, onboarding materials. Address the fear directly.",
+    proofPoints: ["Less time on repetitive queries, more career growth from high-impact conversations", "AI coaching tips help agents improve continuously"]
+  },
+  {
+    headline: "See how much you'd save by automating 60% of your tickets.",
+    supporting: "Get a custom savings estimate based on your ticket volume, team size, and current tools.",
+    pillar: "scale-efficiently",
+    persona: "vp-cx",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "cta",
+    usecase: "outbound",
+    whenToUse: "CTA for efficiency-focused DG campaigns. Pairs with ROI calculator or savings estimate landing page.",
+    proofPoints: []
+  },
+  {
+    headline: "Connect Gorgias data to your BI stack via MCP.",
+    supporting: "Export CX data to your data warehouse or BI tools. Use LLM connectors via MCP to build custom workflows. Your data, your infrastructure, your insights.",
+    pillar: "scale-efficiently",
+    persona: "cio",
+    segment: "enterprise",
+    product: "platform",
+    type: "value-prop",
+    usecase: "sales",
+    whenToUse: "Tech validation stage. CIO/IT needs to know data flows integrate with their existing infrastructure.",
+    proofPoints: ["Data exports to DWH/BI", "LLM connectors via MCP"]
+  },
+  {
+    headline: "Peak season ready without the hiring scramble.",
+    supporting: "AI Agent scales instantly during BFCM, holiday, and flash sale peaks. No temp hires, no ramp-up time, no dropped tickets.",
+    pillar: "scale-efficiently",
+    persona: "support-director",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "value-prop",
+    usecase: "outbound",
+    whenToUse: "Seasonal campaigns (Q3/Q4) targeting CX leaders preparing for peak. Also strong for event panels on scaling.",
+    proofPoints: ["Trove Brands case study", "Handles volume spikes without headcount increases"]
+  },
+
+  // ============================================================
+  // PILLAR 4: WIN WITH ONE PLATFORM
+  // ============================================================
+  {
+    headline: "One inbox. Every channel. Full context.",
+    supporting: "Bring every conversation  -  email, chat, social, SMS, phone  -  into a single workspace where your team always has full customer context.",
+    pillar: "one-platform",
+    persona: "support-director",
+    segment: "enterprise",
+    product: "helpdesk",
+    type: "tagline",
+    usecase: "event",
+    whenToUse: "Event booth messaging, product demos, booth banners. The core Helpdesk story.",
+    proofPoints: ["Orthofeet case study", "Unified inbox across all channels", "Rich customer profile + customer timeline"]
+  },
+  {
+    headline: "Stop tab-switching. Start resolving.",
+    supporting: "Every channel, every customer detail, every Shopify action  -  in one workspace. Agents resolve faster because they never leave the ticket.",
+    pillar: "one-platform",
+    persona: "support-agent",
+    segment: "all",
+    product: "helpdesk",
+    type: "value-prop",
+    usecase: "cx-internal",
+    whenToUse: "Agent-facing enablement, training materials, internal launch comms. Address the daily pain of tool fragmentation.",
+    proofPoints: ["Clear context in one view (no tab switching)", "Order/customer info from Shopify, Klaviyo, Loop, Recharge in one panel"]
+  },
+  {
+    headline: "Shopify-native. Not Shopify-compatible.",
+    supporting: "Gorgias was built for Shopify from day one. Deep integration means real-time order data, one-click actions, and a customer timeline that actually works  -  not a bolt-on connector.",
+    pillar: "one-platform",
+    persona: "head-ecommerce-smb",
+    segment: "smb",
+    product: "platform",
+    type: "value-prop",
+    usecase: "sales",
+    whenToUse: "Competitive differentiation against Zendesk, Freshdesk, or generic helpdesks. Lead with native Shopify advantage.",
+    proofPoints: ["Deepest Shopify integration in the category", "Process refunds, modify orders, handle cancellations directly in Gorgias"]
+  },
+  {
+    headline: "Your tech stack, connected  -  not consolidated.",
+    supporting: "Gorgias integrates natively with Klaviyo, Loop, Recharge, Attentive, and 100+ tools your team already uses. No rip-and-replace required.",
+    pillar: "one-platform",
+    persona: "cio",
+    segment: "enterprise",
+    product: "platform",
+    type: "value-prop",
+    usecase: "sales",
+    whenToUse: "IT validation conversations. CIO needs to know Gorgias fits within the existing stack, not replaces it.",
+    proofPoints: ["100+ native integrations", "Customizable context panel", "Data exports to DWH/BI"]
+  },
+  {
+    headline: "Fragmented tools create data silos and team frustration.",
+    supporting: "Gorgias unifies every channel and integration into one platform  -  so your team gets one view, one workflow, one source of truth. No more toggling between 5 tools to answer one question.",
+    pillar: "one-platform",
+    persona: "vp-cx",
+    segment: "enterprise",
+    product: "helpdesk",
+    type: "objection-handler",
+    usecase: "sales",
+    whenToUse: "When VP CX describes tool sprawl or siloed data. Mirror the pain, then show the unified alternative.",
+    proofPoints: ["Orthofeet case study", "Omnichannel unified inbox", "Customer timeline with full history"]
+  },
+  {
+    headline: "Phone support, finally built for ecommerce.",
+    supporting: "Voice lives inside Gorgias  -  connected to every channel, every order, every conversation. Agents see full context during calls and take action without switching tools.",
+    pillar: "one-platform",
+    persona: "support-director",
+    segment: "enterprise",
+    product: "voice",
+    type: "value-prop",
+    usecase: "outbound",
+    whenToUse: "Campaigns targeting CX teams still using disconnected phone systems (Aircall, Talkdesk bolt-ons).",
+    proofPoints: ["In-context calls with full order history", "Create or modify orders live on the call", "Route calls by language, topic, or urgency"]
+  },
+  {
+    headline: "See every customer's full story  -  before you say hello.",
+    supporting: "Unified customer profile pulls in order history, past conversations, preferences, and browsing data from Shopify and your entire tech stack. Personalization starts with context.",
+    pillar: "one-platform",
+    persona: "support-agent",
+    segment: "all",
+    product: "helpdesk",
+    type: "value-prop",
+    usecase: "cx-internal",
+    whenToUse: "Agent onboarding, enablement decks, internal feature launches. Shows the daily impact of unified data.",
+    proofPoints: ["Rich customer profile", "Connected data from Shopify, Klaviyo, Loop, Recharge"]
+  },
+  {
+    headline: "One platform that grows with you  -  from 10 to 10,000 tickets a month.",
+    supporting: "Start simple, scale confidently. Gorgias handles your growth without re-platforming, re-training, or re-integrating.",
+    pillar: "one-platform",
+    persona: "ceo-smb",
+    segment: "smb",
+    product: "platform",
+    type: "value-prop",
+    usecase: "sales",
+    whenToUse: "SMB sales conversations where the founder is worried about outgrowing a tool or getting locked in.",
+    proofPoints: ["Scalable infrastructure from 10 to 10,000+ tickets/month", "Flexible pricing that scales with volume"]
+  },
+
+  // ============================================================
+  // PRODUCT-SPECIFIC: HELPDESK
+  // ============================================================
+  {
+    headline: "One inbox, every channel, zero friction.",
+    supporting: "The central workspace that unifies every customer conversation and action, so teams resolve faster and deliver a consistent experience.",
+    pillar: "one-platform",
+    persona: "support-director",
+    segment: "all",
+    product: "helpdesk",
+    type: "tagline",
+    usecase: "event",
+    whenToUse: "Helpdesk-specific booth demos, product launch events, feature-focused landing pages.",
+    proofPoints: ["Manage conversations across email, chat, social, SMS, phone", "Act directly inside the workspace  -  no tool switching"]
+  },
+  {
+    headline: "Prioritize what matters most  -  automatically.",
+    supporting: "Gorgias surfaces VIPs, pre-sale opportunities, and time-sensitive requests so your team focuses on conversations that move the needle.",
+    pillar: "one-platform",
+    persona: "support-director",
+    segment: "enterprise",
+    product: "helpdesk",
+    type: "value-prop",
+    usecase: "sales",
+    whenToUse: "Support director demos focused on workflow efficiency and intelligent routing.",
+    proofPoints: ["Automatic VIP and pre-sale prioritization", "Intent and sentiment detection for smart routing"]
+  },
+  {
+    headline: "Measure what CX actually contributes to the business.",
+    supporting: "Tie CX performance directly to sales, retention, and efficiency outcomes  -  not just CSAT and response time. Show leadership the real impact.",
+    pillar: "one-platform",
+    persona: "support-director",
+    segment: "enterprise",
+    product: "helpdesk",
+    type: "value-prop",
+    usecase: "outbound",
+    whenToUse: "DG targeting support directors trying to prove ROI to leadership.",
+    proofPoints: ["Revenue attribution from support interactions", "Performance analytics tied to business outcomes"]
+  },
+
+  // ============================================================
+  // PRODUCT-SPECIFIC: AI AGENT
+  // ============================================================
+  {
+    headline: "One AI. Two skills. Every customer conversation covered.",
+    supporting: "Shopping Assistant guides shoppers to the right purchase. Support Agent resolves post-sale issues instantly. One AI that handles the full journey.",
+    pillar: "conversations-drive-sales",
+    persona: "vp-cx",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "tagline",
+    usecase: "event",
+    whenToUse: "AI Agent product demos, event speaking, booth messaging. The core AI Agent positioning.",
+    proofPoints: ["Resolve up to 60% of pre- and post-sale questions", "Increase sales by 2%"]
+  },
+  {
+    headline: "24/7 support that sounds like your best agent.",
+    supporting: "AI Agent covers nights, weekends, and peaks with accurate, empathetic, brand-authentic responses. No scripts. No robotic tone. Just quality at scale.",
+    pillar: "high-quality",
+    persona: "support-manager-smb",
+    segment: "smb",
+    product: "ai-agent",
+    type: "value-prop",
+    usecase: "outbound",
+    whenToUse: "SMB outbound for support managers who need coverage without hiring. Also works for always-on support positioning.",
+    proofPoints: ["Brand center trains AI on your specific tone", "Cover nights, weekends, and peaks without adding headcount"]
+  },
+  {
+    headline: "AI that does the work, not just the deflecting.",
+    supporting: "Gorgias AI Agent doesn't just suggest articles. It resolves tickets: processes refunds, updates orders, changes addresses, and communicates the outcome  -  end to end.",
+    pillar: "scale-efficiently",
+    persona: "support-director",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "objection-handler",
+    usecase: "sales",
+    whenToUse: "When prospects compare Gorgias to 'deflection-first' tools (Zendesk bots, basic chatbots). Differentiate on actionability.",
+    proofPoints: ["Actionability: AI takes real actions, not just answers questions", "AI x Human Collaboration for complex escalations"]
+  },
+
+  // ============================================================
+  // PRODUCT-SPECIFIC: VOICE
+  // ============================================================
+  {
+    headline: "Phone support, built for ecommerce  -  inside Gorgias.",
+    supporting: "A fully integrated phone solution that connects human conversations to every other channel. Full order context during calls, live order actions, intelligent routing.",
+    pillar: "one-platform",
+    persona: "support-director",
+    segment: "enterprise",
+    product: "voice",
+    type: "tagline",
+    usecase: "event",
+    whenToUse: "Voice product launch events, feature-focused booth demos, integration partner events.",
+    proofPoints: ["Handle complex or high-value issues where empathy matters", "Create or modify orders live on the call"]
+  },
+  {
+    headline: "Stop treating phone as a separate channel.",
+    supporting: "Voice lives inside Gorgias. Call history syncs with chat, email, and social. Agents get full context before picking up, and follow-ups never lose the thread.",
+    pillar: "one-platform",
+    persona: "vp-cx",
+    segment: "enterprise",
+    product: "voice",
+    type: "value-prop",
+    usecase: "sales",
+    whenToUse: "Sales conversations with CX leaders still running Aircall or Talkdesk alongside their helpdesk.",
+    proofPoints: ["Unify call history with other channels", "Route calls intelligently by language, topic, or urgency"]
+  },
+
+  // ============================================================
+  // PRODUCT-SPECIFIC: GORGIAS ENGAGE
+  // ============================================================
+  {
+    headline: "Bring customers back with 1:1 outreach that actually converts.",
+    supporting: "Smart, automated re-engagement via SMS  -  restock reminders, new product drops, win-back flows. Conversational, not campaign-blast.",
+    pillar: "conversations-drive-sales",
+    persona: "marketing-manager",
+    segment: "all",
+    product: "engage",
+    type: "tagline",
+    usecase: "event",
+    whenToUse: "Engage product launch events, retention-focused panels, co-marketing with SMS partners.",
+    proofPoints: ["Re-engage past buyers automatically at restock/repurchase timing", "Orchestrate across chat, email, and SMS"]
+  },
+  {
+    headline: "Retention that feels personal, not promotional.",
+    supporting: "Gorgias Engage uses purchase history and conversation context to send the right message at the right time  -  so customers hear from you when it matters, not when your campaign calendar says so.",
+    pillar: "conversations-drive-sales",
+    persona: "ecommerce-cx-manager",
+    segment: "all",
+    product: "engage",
+    type: "value-prop",
+    usecase: "outbound",
+    whenToUse: "Outbound targeting ecommerce/CX managers frustrated with generic SMS blasts and low open rates.",
+    proofPoints: ["AI Journeys triggers based on shopper behavior", "Personalized timing and incentives for win-back"]
+  },
+
+  // ============================================================
+  // PERSONA-SPECIFIC: CEO (ENTERPRISE)
+  // ============================================================
+  {
+    headline: "Grow faster, stay lean  -  with AI you control.",
+    supporting: "Gorgias gives your team the infrastructure to automate support, drive revenue from conversations, and scale operations without scaling costs.",
+    pillar: "platform-level",
+    persona: "ceo-enterprise",
+    segment: "enterprise",
+    product: "platform",
+    type: "value-prop",
+    usecase: "sales",
+    whenToUse: "Executive-level sales conversations. Lead with business outcomes, not product features.",
+    proofPoints: ["60%+ automation rate", "Revenue attribution from support interactions", "Support scales from 10 to 10,000+ tickets without re-platforming"]
+  },
+  {
+    headline: "Your competitors are already turning support into a sales channel.",
+    supporting: "Leading Shopify brands use Gorgias to convert support conversations into revenue opportunities. The question isn't whether to adopt Conversational Commerce  -  it's how fast.",
+    pillar: "conversations-drive-sales",
+    persona: "ceo-enterprise",
+    segment: "enterprise",
+    product: "platform",
+    type: "value-prop",
+    usecase: "outbound",
+    whenToUse: "Exec-targeted demand gen. Create urgency around competitive dynamics.",
+    proofPoints: ["15,000+ ecommerce brands on Gorgias", "Shopify x ChatGPT driving conversational commerce trend"]
+  },
+
+  // ============================================================
+  // PERSONA-SPECIFIC: CFO
+  // ============================================================
+  {
+    headline: "Cut cost-to-serve by 40-60% while CSAT stays flat or improves.",
+    supporting: "AI Agent automates 60%+ of tickets. Agents handle more with better context. You scale without linear headcount growth  -  and the numbers prove it.",
+    pillar: "scale-efficiently",
+    persona: "cfo",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "value-prop",
+    usecase: "sales",
+    whenToUse: "ROI and pricing stage of enterprise deals. CFO needs hard unit economics.",
+    proofPoints: ["Reduce support costs by 40-60%", "Unit economics dashboard tracks cost per ticket and automation ROI"]
+  },
+  {
+    headline: "The ROI conversation CFOs actually want to have.",
+    supporting: "Revenue from support conversations. Cost-per-ticket reduction. Automation rate by channel. Gorgias gives finance the data to say yes, not just the promise.",
+    pillar: "scale-efficiently",
+    persona: "cfo",
+    segment: "enterprise",
+    product: "platform",
+    type: "value-prop",
+    usecase: "sales",
+    whenToUse: "Pre-CFO meeting prep. Arm the champion (VP CX) with messaging that speaks finance language.",
+    proofPoints: ["Revenue dashboard", "Unit economics tracking", "Performance benchmarking against industry standards"]
+  },
+
+  // ============================================================
+  // PERSONA-SPECIFIC: CIO
+  // ============================================================
+  {
+    headline: "Fits your stack. Protects your data. Scales with your business.",
+    supporting: "Gorgias integrates with your existing infrastructure  -  Shopify, ERP, BI tools, compliance systems. No data silos, no security gaps, no re-platforming.",
+    pillar: "one-platform",
+    persona: "cio",
+    segment: "enterprise",
+    product: "platform",
+    type: "value-prop",
+    usecase: "sales",
+    whenToUse: "IT validation stage. CIO needs integration, security, and scalability confidence.",
+    proofPoints: ["100+ native integrations", "Data exports to DWH/BI", "LLM connectors via MCP", "Multi-store / markets support"]
+  },
+
+  // ============================================================
+  // PERSONA-SPECIFIC: VP CX / OPERATIONS
+  // ============================================================
+  {
+    headline: "Run CX like a business  -  not a cost line.",
+    supporting: "Gorgias gives you the tools to prove support's impact on revenue, retention, and efficiency. Consolidate your stack, scale your team, and show leadership the ROI.",
+    pillar: "platform-level",
+    persona: "vp-cx",
+    segment: "enterprise",
+    product: "platform",
+    type: "value-prop",
+    usecase: "sales",
+    whenToUse: "Discovery-stage conversations with VP CX/Ops. Validate their strategic ambition, then show how Gorgias enables it.",
+    proofPoints: ["Revenue attribution dashboard", "Tech-stack consolidation", "Proof of ROI on tools and AI"]
+  },
+  {
+    headline: "Consolidate your CX stack without losing what works.",
+    supporting: "Gorgias replaces fragmented tools while integrating with the ecosystem you've already built  -  Klaviyo, Loop, Recharge, Attentive, and 100+ more.",
+    pillar: "one-platform",
+    persona: "vp-cx",
+    segment: "enterprise",
+    product: "platform",
+    type: "value-prop",
+    usecase: "outbound",
+    whenToUse: "DG targeting VP CX frustrated with tool sprawl. Lead with consolidation, not rip-and-replace.",
+    proofPoints: ["100+ native integrations", "Customizable context panel", "Unified inbox across all channels"]
+  },
+
+  // ============================================================
+  // PERSONA-SPECIFIC: SUPPORT AGENT
+  // ============================================================
+  {
+    headline: "Less time on FAQs. More time on conversations that matter.",
+    supporting: "AI handles the repetitive 60%. You get the complex, rewarding conversations  -  VIP customers, tricky edge cases, relationship-building. Better work, not more work.",
+    pillar: "scale-efficiently",
+    persona: "support-agent",
+    segment: "all",
+    product: "ai-agent",
+    type: "value-prop",
+    usecase: "cx-internal",
+    whenToUse: "Agent-facing internal comms, onboarding, and enablement materials.",
+    proofPoints: ["AI Co-pilot assists on complex tickets", "More career growth from high-impact conversations"]
+  },
+  {
+    headline: "Everything you need, in one view.",
+    supporting: "Customer history, order details, past conversations, recommended actions  -  all visible without opening a new tab. Reply in under 30 seconds, every time.",
+    pillar: "one-platform",
+    persona: "support-agent",
+    segment: "all",
+    product: "helpdesk",
+    type: "value-prop",
+    usecase: "cx-internal",
+    whenToUse: "Agent onboarding materials, feature training, internal enablement decks.",
+    proofPoints: ["Clear context in one view", "Smart automations for FAQs", "Workflows that reduce clicks and errors"]
+  },
+
+  // ============================================================
+  // PERSONA-SPECIFIC: SMB CEO / FOUNDER
+  // ============================================================
+  {
+    headline: "All-in-one CX that's affordable, fast to set up, and actually works.",
+    supporting: "Gorgias gives lean teams everything they need: AI automation, unified inbox, Shopify integration  -  without enterprise complexity or enterprise pricing.",
+    pillar: "platform-level",
+    persona: "ceo-smb",
+    segment: "smb",
+    product: "platform",
+    type: "value-prop",
+    usecase: "outbound",
+    whenToUse: "SMB outbound and paid campaigns targeting founders. Lead with simplicity and speed-to-value.",
+    proofPoints: ["No-code setup", "Affordable pricing that scales", "AI automates 60%+ of tickets from day one"]
+  },
+  {
+    headline: "You've got 15 things on your plate. Support shouldn't be one of them.",
+    supporting: "Set up Gorgias in a day, let AI handle the repetitive stuff, and get back to growing your business. Simple, reliable, and it works while you sleep.",
+    pillar: "scale-efficiently",
+    persona: "ceo-smb",
+    segment: "smb",
+    product: "ai-agent",
+    type: "value-prop",
+    usecase: "outbound",
+    whenToUse: "SMB DG targeting overwhelmed founders. Empathize with the 'too many hats' pain, then solve it.",
+    proofPoints: ["24/7 AI coverage without headcount", "Simple setup, no IT expertise needed"]
+  },
+
+  // ============================================================
+  // PERSONA-SPECIFIC: SMB SUPPORT MANAGER / AGENT
+  // ============================================================
+  {
+    headline: "Simple to set up. Easy to use. Actually saves time.",
+    supporting: "Gorgias automates your FAQs, unifies your channels, and gives you back hours every week. No IT team required.",
+    pillar: "scale-efficiently",
+    persona: "support-manager-smb",
+    segment: "smb",
+    product: "platform",
+    type: "value-prop",
+    usecase: "outbound",
+    whenToUse: "SMB outbound targeting support managers who need simplicity and quick ROI.",
+    proofPoints: ["Easy AI to automate basic FAQs", "Reliable tool that doesn't require IT expertise"]
+  },
+
+  // ============================================================
+  // PERSONA-SPECIFIC: VP ECOMMERCE / DIGITAL
+  // ============================================================
+  {
+    headline: "Make every visitor a conversation  -  and every conversation a conversion.",
+    supporting: "Gorgias connects the shopping experience to the support experience. Shoppers get real-time help. Your team gets attribution data. Everyone wins.",
+    pillar: "conversations-drive-sales",
+    persona: "vp-ecommerce",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "value-prop",
+    usecase: "outbound",
+    whenToUse: "DG targeting VP Ecommerce. Lead with conversion and AOV, not support automation.",
+    proofPoints: ["Shopping Assistant drives real-time product recommendations", "Revenue statistics track conversions from support interactions"]
+  },
+  {
+    headline: "CX + commerce, finally in one platform.",
+    supporting: "Gorgias integrates with your ecommerce stack to connect support data with sales outcomes. See what support conversations drive  -  and optimize accordingly.",
+    pillar: "one-platform",
+    persona: "vp-ecommerce",
+    segment: "enterprise",
+    product: "platform",
+    type: "value-prop",
+    usecase: "partnership",
+    whenToUse: "Co-marketing with Shopify, Klaviyo, or other ecommerce partners. Lead with the unified story.",
+    proofPoints: ["Deep Shopify integration", "Native connections with Klaviyo, Attentive, Recharge, Loop"]
+  },
+
+  // ============================================================
+  // PERSONA-SPECIFIC: ECOMMERCE MANAGER
+  // ============================================================
+  {
+    headline: "Hit your CRO targets without waiting on dev.",
+    supporting: "Gorgias gives you plug-and-play AI, easy A/B testing for chat campaigns, and granular analytics  -  so you can optimize the buying experience yourself.",
+    pillar: "conversations-drive-sales",
+    persona: "ecommerce-manager",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "value-prop",
+    usecase: "outbound",
+    whenToUse: "DG targeting ecommerce managers focused on CRO and frustrated by dev dependencies.",
+    proofPoints: ["Plug-and-play integrations", "Granular control for A/B testing and optimization", "Minimal reliance on dev teams"]
+  },
+
+  // ============================================================
+  // PERSONA-SPECIFIC: MARKETING MANAGER
+  // ============================================================
+  {
+    headline: "Bridge the gap between marketing and support.",
+    supporting: "Gorgias connects CX insights with your marketing flows  -  so retention messaging is informed by real conversations, not just segments and send schedules.",
+    pillar: "one-platform",
+    persona: "marketing-manager",
+    segment: "all",
+    product: "platform",
+    type: "value-prop",
+    usecase: "partnership",
+    whenToUse: "Co-marketing with Klaviyo, Attentive. Also for DG targeting retention/CRM marketers.",
+    proofPoints: ["Ability to integrate marketing + support insights", "Unified reporting across channels for clear attribution"]
+  },
+
+  // ============================================================
+  // USE CASE: PARTNERSHIP
+  // ============================================================
+  {
+    headline: "Better together: Gorgias + [Partner] for the complete customer journey.",
+    supporting: "Gorgias handles the conversation. [Partner] handles [their domain]. Together, brands get a connected experience from first click to repeat purchase.",
+    pillar: "one-platform",
+    persona: "all",
+    segment: "all",
+    product: "platform",
+    type: "tagline",
+    usecase: "partnership",
+    whenToUse: "Co-marketing templates for integration partners (Klaviyo, Loop, Recharge, Attentive, etc.). Replace [Partner] and [their domain] for each partner.",
+    proofPoints: ["100+ native integrations", "Shopify-native platform"]
+  },
+  {
+    headline: "The Conversational Commerce stack for Shopify.",
+    supporting: "Gorgias is the conversation layer that connects your ecommerce tools into one customer experience. From helpdesk to AI to outbound  -  all Shopify-native.",
+    pillar: "one-platform",
+    persona: "all",
+    segment: "all",
+    product: "platform",
+    type: "tagline",
+    usecase: "partnership",
+    whenToUse: "Shopify co-marketing, partner directories, app store listings, ecosystem events.",
+    proofPoints: ["Shopify-native integration", "15,000+ ecommerce brands"]
+  },
+
+  // ============================================================
+  // COMPETITIVE POSITIONING
+  // ============================================================
+  {
+    headline: "Built for Shopify. Not bolted on.",
+    supporting: "Unlike Zendesk or Freshdesk, Gorgias was purpose-built for ecommerce on Shopify. Real-time order data, one-click actions, and a customer timeline that works  -  natively, not through a connector.",
+    pillar: "one-platform",
+    persona: "support-director",
+    segment: "all",
+    product: "platform",
+    type: "objection-handler",
+    usecase: "sales",
+    whenToUse: "Competitive positioning against Zendesk, Freshdesk, or other horizontal helpdesks. Lead with Shopify-native advantage.",
+    proofPoints: ["Deepest Shopify integration in category", "Process refunds, modify orders, handle cancellations directly in Gorgias"]
+  },
+  {
+    headline: "AI that acts  -  not just answers.",
+    supporting: "Unlike deflection-first chatbots, Gorgias AI Agent resolves tickets end to end: processes refunds, updates addresses, modifies orders, and communicates outcomes. Customers get answers, not article links.",
+    pillar: "scale-efficiently",
+    persona: "vp-cx",
+    segment: "enterprise",
+    product: "ai-agent",
+    type: "objection-handler",
+    usecase: "sales",
+    whenToUse: "Competitive positioning against Siena AI, Zendesk bots, or any 'AI deflection' tool. Differentiate on actionability.",
+    proofPoints: ["Actionability: AI takes real actions", "AI x Human Collaboration for seamless escalation"]
+  },
+  {
+    headline: "Don't settle for a helpdesk that's learning ecommerce  -  or an AI tool with no platform behind it.",
+    supporting: "Gorgias is both: a mature helpdesk with deep Shopify integration AND AI that drives revenue and resolves tickets. One platform. No stitching required.",
+    pillar: "platform-level",
+    persona: "vp-cx",
+    segment: "enterprise",
+    product: "platform",
+    type: "objection-handler",
+    usecase: "sales",
+    whenToUse: "When prospects are evaluating a legacy helpdesk (Zendesk) + point AI solution (Siena, Decagon). Position Gorgias as the unified alternative.",
+    proofPoints: ["Full platform: Helpdesk + AI Agent + Voice + Engage", "Shopify-native, not Shopify-compatible"]
+  }
+];
+
+// ============================================================
+// RENDERING & FILTERING
+// ============================================================
+
+const pillarLabels = {
+  'conversations-drive-sales': 'Conversations → Sales',
+  'high-quality': 'High-Quality Conversations',
+  'scale-efficiently': 'Scale Efficiently',
+  'one-platform': 'One Platform',
+  'platform-level': 'Platform-Level'
+};
+
+const personaLabels = {
+  'all': 'All Personas',
+  'ceo-enterprise': 'CEO (Enterprise)',
+  'cio': 'CIO / VP IT',
+  'cfo': 'CFO / VP Finance',
+  'vp-cx': 'VP CX / Operations',
+  'support-director': 'Support Director',
+  'support-agent': 'Support Agent',
+  'vp-ecommerce': 'VP Ecommerce',
+  'ecommerce-manager': 'Ecommerce Manager',
+  'ceo-smb': 'CEO / Founder (SMB)',
+  'support-manager-smb': 'Support Manager (SMB)',
+  'head-ecommerce-smb': 'Head of Ecommerce (SMB)',
+  'marketing-manager': 'Marketing Manager',
+  'ecommerce-cx-manager': 'Ecommerce & CX Manager'
+};
+
+const productLabels = {
+  'platform': 'Platform',
+  'helpdesk': 'Helpdesk',
+  'ai-agent': 'AI Agent',
+  'voice': 'Voice',
+  'engage': 'Gorgias Engage'
+};
+
+const typeLabels = {
+  'tagline': 'Tagline',
+  'value-prop': 'Value Prop',
+  'proof-point': 'Proof Point',
+  'objection-handler': 'Objection Handler',
+  'cta': 'CTA'
+};
+
+const typeTagClass = {
+  'tagline': 'tag-type-tagline',
+  'value-prop': 'tag-type-valueprop',
+  'proof-point': 'tag-type-proofpoint',
+  'objection-handler': 'tag-type-objection',
+  'cta': 'tag-type-cta'
+};
+
+const segmentLabels = { 'enterprise': 'Enterprise', 'smb': 'SMB', 'all': 'All Segments' };
+const segmentTagClass = { 'enterprise': 'tag-segment-enterprise', 'smb': 'tag-segment-smb', 'all': 'tag-segment-all' };
+
+function renderCard(msg, idx) {
+  const proofHTML = msg.proofPoints.length > 0
+    ? `<div class="card-proof"><strong>Proof points:</strong> ${msg.proofPoints.join(' · ')}</div>`
+    : '';
+
+  return `
+    <div class="card" data-idx="${idx}">
+      <div class="card-header">
+        <div class="card-tags">
+          <span class="tag ${typeTagClass[msg.type]}">${typeLabels[msg.type]}</span>
+          <span class="tag tag-pillar">${pillarLabels[msg.pillar]}</span>
+          <span class="tag tag-product">${productLabels[msg.product]}</span>
+          <span class="tag tag-persona">${personaLabels[msg.persona]}</span>
+        </div>
+        <button class="card-copy-btn" onclick="copyCard(this, ${idx})">Copy</button>
+      </div>
+      <div class="card-body">
+        <div class="card-headline">${msg.headline}</div>
+        <div class="card-supporting">${msg.supporting}</div>
+      </div>
+      <div class="card-meta">
+        <div class="meta-item">
+          <span class="meta-label">When to use</span>
+          <span class="meta-value">${msg.whenToUse}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Segment</span>
+          <span class="meta-value">${segmentLabels[msg.segment]}</span>
+        </div>
+      </div>
+      ${proofHTML}
+    </div>
+  `;
+}
+
+function getFilteredMessages() {
+  const search = document.getElementById('search').value.toLowerCase();
+  const pillar = document.getElementById('filter-pillar').value;
+  const persona = document.getElementById('filter-persona').value;
+  const product = document.getElementById('filter-product').value;
+  const type = document.getElementById('filter-type').value;
+  const usecase = document.getElementById('filter-usecase').value;
+
+  return MESSAGES.filter((msg, idx) => {
+    if (pillar && msg.pillar !== pillar) return false;
+    if (persona && msg.persona !== persona && msg.persona !== 'all') return false;
+    if (product && msg.product !== product && msg.product !== 'platform') {
+      if (product !== 'platform' || msg.product !== 'platform') {
+        if (product && msg.product !== product) return false;
+      }
+    }
+    if (type && msg.type !== type) return false;
+    if (usecase && msg.usecase !== usecase) return false;
+    if (search) {
+      const hay = [msg.headline, msg.supporting, msg.whenToUse, ...msg.proofPoints,
+        pillarLabels[msg.pillar], personaLabels[msg.persona], productLabels[msg.product],
+        typeLabels[msg.type], segmentLabels[msg.segment]].join(' ').toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+}
+
+function render() {
+  const filtered = getFilteredMessages();
+  const grid = document.getElementById('grid');
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty-state"><h3>No messages match your filters</h3><p>Try broadening your search or clearing filters.</p></div>`;
+  } else {
+    grid.innerHTML = filtered.map((msg) => renderCard(msg, MESSAGES.indexOf(msg))).join('');
+  }
+
+  document.getElementById('total-count').textContent = MESSAGES.length;
+  document.getElementById('visible-count').textContent = filtered.length;
+}
+
+function clearFilters() {
+  document.getElementById('search').value = '';
+  document.getElementById('filter-pillar').value = '';
+  document.getElementById('filter-persona').value = '';
+  document.getElementById('filter-product').value = '';
+  document.getElementById('filter-type').value = '';
+  document.getElementById('filter-usecase').value = '';
+  render();
+}
+
+function showToast(text) {
+  const toast = document.getElementById('toast');
+  toast.textContent = text;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+function copyCard(btn, idx) {
+  const msg = MESSAGES[idx];
+  const text = `${msg.headline}\n${msg.supporting}\n\nWhen to use: ${msg.whenToUse}${msg.proofPoints.length ? '\nProof points: ' + msg.proofPoints.join(', ') : ''}`;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+  });
+}
+
+function copyVisible() {
+  const filtered = getFilteredMessages();
+  const text = filtered.map(msg =>
+    `## ${msg.headline}\n${msg.supporting}\nPillar: ${pillarLabels[msg.pillar]} | Persona: ${personaLabels[msg.persona]} | Product: ${productLabels[msg.product]} | Type: ${typeLabels[msg.type]}\nWhen to use: ${msg.whenToUse}${msg.proofPoints.length ? '\nProof points: ' + msg.proofPoints.join(', ') : ''}`
+  ).join('\n\n---\n\n');
+  navigator.clipboard.writeText(text).then(() => showToast(`Copied ${filtered.length} messages to clipboard`));
+}
+
+// Event listeners
+document.getElementById('search').addEventListener('input', render);
+['filter-pillar', 'filter-persona', 'filter-product', 'filter-type', 'filter-usecase'].forEach(id => {
+  document.getElementById(id).addEventListener('change', render);
+});
+
+// Initial render
+render();
+
+// ============================================================
+// CHAT ASSISTANT
+// ============================================================
+
+const CHAT_KNOWLEDGE = {
+  brand: {
+    name: "Gorgias",
+    identity: "The Conversational Commerce platform for Shopify brands",
+    oneLiner: "Connect with shoppers 1:1 across the entire journey to drive conversions, scale support, and maximize lifetime value.",
+    doNot: ["AI-powered CX platform", "helpdesk company", "customer service tool", "Gorgias AI", "bot"],
+    doUse: ["Conversational Commerce platform", "Helpdesk", "AI Agent", "Shopping Assistant", "Support Agent", "Voice", "Gorgias Engage", "AI Journeys"],
+    icp: "$3M-$100M annual GMV, Shopify (Plus), US/APAC/EMEA",
+    category: "Conversational Commerce",
+    taglines: [
+      "Brands that win the conversation, win the customer.",
+      "Conversations that drive revenue, not just resolutions.",
+      "Your partner in conversational commerce."
+    ]
+  },
+  pillars: [
+    { id: "conversations-drive-sales", name: "Win with conversations that drive sales", summary: "Turn every conversation into a revenue opportunity  -  product recs, chat-to-checkout, cross-sell, proactive engagement." },
+    { id: "high-quality", name: "Win with high-quality conversations", summary: "AI that learns your brand; coaching tips, quality scoring, enterprise-grade control." },
+    { id: "scale-efficiently", name: "Win by scaling efficiently", summary: "Automate 60%+ of tickets; lower cost-to-serve without headcount growth." },
+    { id: "one-platform", name: "Win with one platform", summary: "Shopify-native, omnichannel, full customer timeline; deep integrations with Klaviyo, Loop, Recharge, Attentive." }
+  ],
+  products: [
+    { id: "helpdesk", name: "Helpdesk", tagline: "One inbox, every channel, zero friction." },
+    { id: "ai-agent", name: "AI Agent", tagline: "One AI with two skills: Shopping Assistant (pre-sale) + Support Agent (post-sale)." },
+    { id: "voice", name: "Voice", tagline: "Phone support built for ecommerce, inside Gorgias." },
+    { id: "engage", name: "Gorgias Engage", tagline: "SMS outbound for retention and re-engagement." },
+    { id: "ai-journeys", name: "AI Journeys", tagline: "Automated, personalized follow-up flows." }
+  ],
+  competitors: {
+    helpdesk: ["Zendesk", "Intercom", "Richpanel", "Gladly", "Kustomer", "Freshdesk", "Help Scout", "Redo", "Dixa", "Zowie", "Tidio"],
+    aiOnly: ["Siena AI", "Decagon", "Rep AI", "Yuma AI", "Digital Genius", "Sidekick AI", "Kodif"],
+    newEntrant: ["Klaviyo (Customer Hub, Customer Agent)"]
+  },
+  narrative: {
+    shift: "AI is reshaping shopping. Discovery, purchase, and service are converging into one continuous, conversational experience.",
+    gap: "Most ecommerce systems were built for static web browsing and 1:many marketing  -  not real-time 1:1 dialogue.",
+    opportunity: "The next wave of growth comes from brands that operate conversationally, using AI for seamless 1:1 experiences.",
+    role: "Gorgias helps ecommerce brands connect with shoppers through AI-powered 1:1 conversations across the entire customer journey."
+  }
+};
+
+// Synonym/intent mapping for smarter matching
+const INTENT_MAP = [
+  { intents: ["tagline", "headline", "slogan", "booth copy", "banner", "signage", "event headline"], filters: { type: "tagline" } },
+  { intents: ["value prop", "value proposition", "benefit", "why gorgias", "messaging"], filters: { type: "value-prop" } },
+  { intents: ["proof point", "evidence", "data", "stat", "case study", "proof"], filters: { type: "proof-point" } },
+  { intents: ["objection", "pushback", "concern", "handle", "overcome", "rebuttal"], filters: { type: "objection-handler" } },
+  { intents: ["cta", "call to action", "next step", "book a demo"], filters: { type: "cta" } },
+  { intents: ["event", "booth", "conference", "speaking", "sponsorship", "tradeshow", "shoptalk"], filters: { usecase: "event" } },
+  { intents: ["outbound", "email", "demand gen", "dg", "ad", "campaign", "ads"], filters: { usecase: "outbound" } },
+  { intents: ["sales", "deck", "demo", "call", "pitch", "discovery"], filters: { usecase: "sales" } },
+  { intents: ["partner", "co-marketing", "integration", "co-brand"], filters: { usecase: "partnership" } },
+  { intents: ["internal", "enablement", "training", "onboarding", "change management", "agent facing"], filters: { usecase: "cx-internal" } },
+  { intents: ["ceo", "founder", "c-suite", "executive"], filters: { persona: "ceo-enterprise" } },
+  { intents: ["cfo", "finance", "roi", "cost", "budget", "pricing", "unit economics"], filters: { persona: "cfo" } },
+  { intents: ["cio", "it", "security", "integration", "tech stack", "data", "compliance"], filters: { persona: "cio" } },
+  { intents: ["vp cx", "vp ops", "cx leader", "operations leader", "head of cx", "director of ops"], filters: { persona: "vp-cx" } },
+  { intents: ["support director", "cx director", "support manager", "cx manager"], filters: { persona: "support-director" } },
+  { intents: ["agent", "support agent", "cx specialist", "frontline"], filters: { persona: "support-agent" } },
+  { intents: ["vp ecommerce", "vp ecom", "head of digital", "ecom leader", "vp digital"], filters: { persona: "vp-ecommerce" } },
+  { intents: ["ecommerce manager", "ecom manager", "digital manager"], filters: { persona: "ecommerce-manager" } },
+  { intents: ["smb", "small business", "startup", "small brand", "lean team"], filters: { segment: "smb" } },
+  { intents: ["enterprise", "mid-market", "midmarket", "large brand", "large company"], filters: { segment: "enterprise" } },
+  { intents: ["helpdesk", "inbox", "unified inbox", "workspace", "ticket"], filters: { product: "helpdesk" } },
+  { intents: ["ai agent", "ai", "automation", "automate", "shopping assistant", "support agent"], filters: { product: "ai-agent" } },
+  { intents: ["voice", "phone", "call", "phone support"], filters: { product: "voice" } },
+  { intents: ["engage", "sms", "outbound sms", "re-engage", "retention"], filters: { product: "engage" } },
+  { intents: ["revenue", "sales", "conversion", "aov", "upsell", "cross-sell"], filters: { pillar: "conversations-drive-sales" } },
+  { intents: ["quality", "brand voice", "tone", "coaching", "accuracy", "sop"], filters: { pillar: "high-quality" } },
+  { intents: ["scale", "efficiency", "automate", "cost", "headcount", "60%"], filters: { pillar: "scale-efficiently" } },
+  { intents: ["platform", "omnichannel", "unified", "one platform", "shopify", "integration"], filters: { pillar: "one-platform" } },
+  { intents: ["zendesk", "intercom", "freshdesk", "competitor", "competitive", "vs", "compare", "siena", "gladly", "kustomer", "klaviyo"], filters: { type: "objection-handler" } }
+];
+
+function detectIntents(query) {
+  const q = query.toLowerCase();
+  const matched = { personas: [], pillars: [], products: [], types: [], usecases: [], segments: [] };
+
+  INTENT_MAP.forEach(mapping => {
+    const hit = mapping.intents.some(intent => q.includes(intent));
+    if (hit) {
+      if (mapping.filters.persona) matched.personas.push(mapping.filters.persona);
+      if (mapping.filters.pillar) matched.pillars.push(mapping.filters.pillar);
+      if (mapping.filters.product) matched.products.push(mapping.filters.product);
+      if (mapping.filters.type) matched.types.push(mapping.filters.type);
+      if (mapping.filters.usecase) matched.usecases.push(mapping.filters.usecase);
+      if (mapping.filters.segment) matched.segments.push(mapping.filters.segment);
+    }
+  });
+
+  return matched;
+}
+
+function scoreMessage(msg, intents, query) {
+  let score = 0;
+  const q = query.toLowerCase();
+
+  // Intent-based scoring
+  if (intents.personas.length && (intents.personas.includes(msg.persona) || msg.persona === 'all')) score += 10;
+  if (intents.pillars.length && intents.pillars.includes(msg.pillar)) score += 8;
+  if (intents.products.length && (intents.products.includes(msg.product) || msg.product === 'platform')) score += 6;
+  if (intents.types.length && intents.types.includes(msg.type)) score += 12;
+  if (intents.usecases.length && intents.usecases.includes(msg.usecase)) score += 10;
+  if (intents.segments.length && (intents.segments.includes(msg.segment) || msg.segment === 'all')) score += 5;
+
+  // Keyword matching in content
+  const words = q.split(/\s+/).filter(w => w.length > 2);
+  const hay = [msg.headline, msg.supporting, msg.whenToUse, ...msg.proofPoints].join(' ').toLowerCase();
+  words.forEach(word => {
+    if (hay.includes(word)) score += 2;
+    if (msg.headline.toLowerCase().includes(word)) score += 3;
+  });
+
+  return score;
+}
+
+function searchMessages(query) {
+  const intents = detectIntents(query);
+  const scored = MESSAGES.map((msg, idx) => ({
+    msg, idx,
+    score: scoreMessage(msg, intents, query)
+  })).filter(s => s.score > 0).sort((a, b) => b.score - a.score);
+
+  return scored.slice(0, 5);
+}
+
+function buildResultCard(result) {
+  const msg = result.msg;
+  return `
+    <div class="chat-result-card" onclick="copyChatResult(this, ${result.idx})">
+      <div class="chat-result-headline">${msg.headline}</div>
+      <div class="chat-result-supporting">${msg.supporting}</div>
+      <div class="chat-result-meta">
+        <span class="chat-result-tag ${typeTagClass[msg.type]}">${typeLabels[msg.type]}</span>
+        <span class="chat-result-tag tag-persona">${personaLabels[msg.persona]}</span>
+        <span class="chat-result-tag tag-product">${productLabels[msg.product]}</span>
+      </div>
+      <span class="chat-result-copy">Click to copy</span>
+    </div>
+  `;
+}
+
+function copyChatResult(el, idx) {
+  const msg = MESSAGES[idx];
+  const text = `${msg.headline}\n${msg.supporting}`;
+  navigator.clipboard.writeText(text).then(() => {
+    const copyEl = el.querySelector('.chat-result-copy');
+    copyEl.textContent = 'Copied!';
+    setTimeout(() => { copyEl.textContent = 'Click to copy'; }, 1500);
+  });
+}
+
+// Special Q&A for knowledge questions
+function answerKnowledgeQuestion(query) {
+  const q = query.toLowerCase();
+
+  // What is Gorgias / who are we
+  if (q.match(/what is gorgias|who are we|what do we do|our identity|how.*describe gorgias/)) {
+    return `<strong>${CHAT_KNOWLEDGE.brand.name}</strong> is <strong>${CHAT_KNOWLEDGE.brand.identity}</strong>.<br><br>${CHAT_KNOWLEDGE.brand.oneLiner}<br><br><strong>Approved taglines:</strong><br>${CHAT_KNOWLEDGE.brand.taglines.map(t => '&bull; ' + t).join('<br>')}<br><br><strong>ICP:</strong> ${CHAT_KNOWLEDGE.brand.icp}<br><strong>Category:</strong> ${CHAT_KNOWLEDGE.brand.category}`;
+  }
+
+  // Taglines specifically
+  if (q.match(/tagline|slogan|approved tagline|brand tagline|headline options/)) {
+    return `<strong>Approved taglines:</strong><br>${CHAT_KNOWLEDGE.brand.taglines.map(t => '&bull; <strong>' + t + '</strong>').join('<br>')}<br><br>These are the official approved taglines from the 2026 positioning. Use the filters above to find more taglines for specific personas, pillars, or use cases.`;
+  }
+
+  // Terminology dos and don'ts
+  if (q.match(/don't say|do not say|avoid saying|wrong term|terminology|do's and don'ts|dos and donts|what.*(not|never).*call/)) {
+    return `<strong>Never say:</strong> ${CHAT_KNOWLEDGE.brand.doNot.map(t => `"${t}"`).join(', ')}<br><br><strong>Always use:</strong> ${CHAT_KNOWLEDGE.brand.doUse.join(', ')}`;
+  }
+
+  // Pillars overview
+  if (q.match(/pillars|positioning pillars|four pillars|4 pillars|our pillars/)) {
+    return CHAT_KNOWLEDGE.pillars.map((p, i) => `<strong>${i+1}. ${p.name}</strong><br>${p.summary}`).join('<br><br>');
+  }
+
+  // Products overview
+  if (q.match(/products|product line|what.*sell|our products|product names/)) {
+    return CHAT_KNOWLEDGE.products.map(p => `<strong>${p.name}</strong>  -  ${p.tagline}`).join('<br><br>');
+  }
+
+  // Competitors
+  if (q.match(/competitors|competitive|who.*compete|competitive landscape|who.*against/)) {
+    return `<strong>Helpdesk + AI:</strong> ${CHAT_KNOWLEDGE.competitors.helpdesk.join(', ')}<br><br><strong>AI-only:</strong> ${CHAT_KNOWLEDGE.competitors.aiOnly.join(', ')}<br><br><strong>New entrant:</strong> ${CHAT_KNOWLEDGE.competitors.newEntrant.join(', ')}`;
+  }
+
+  // Market narrative
+  if (q.match(/narrative|market story|market shift|conversational commerce|category|the shift|the gap|the opportunity/)) {
+    return `<strong>The Shift:</strong> ${CHAT_KNOWLEDGE.narrative.shift}<br><br><strong>The Gap:</strong> ${CHAT_KNOWLEDGE.narrative.gap}<br><br><strong>The Opportunity:</strong> ${CHAT_KNOWLEDGE.narrative.opportunity}<br><br><strong>Our Role:</strong> ${CHAT_KNOWLEDGE.narrative.role}`;
+  }
+
+  // Persona questions
+  if (q.match(/personas|who.*buyer|who.*sell to|who.*audience|target audience|buying committee/)) {
+    return `<strong>Enterprise/Mid-market:</strong><br>Champions: VP of CX/Operations, Support Director<br>Decision-makers: CEO, CIO, CFO<br>Influencers: VP Ecommerce, Ecommerce Manager<br><br><strong>SMB:</strong><br>Decision-maker: CEO/Founder<br>Users/Buyers: Support Manager, Head of Ecommerce<br><br><strong>Key insight:</strong> SMBs wear multiple hats. Enterprise has a formal buying process (CX opens &rarr; IT validates &rarr; CFO negotiates &rarr; Legal closes). Cycle: 52-115 days.`;
+  }
+
+  // ICP
+  if (q.match(/icp|ideal customer|target market|who.*target/)) {
+    return `<strong>ICP:</strong> ${CHAT_KNOWLEDGE.brand.icp}<br><br>Shopify brands in ecommerce, looking to automate support, drive revenue through conversations, and scale CX operations.`;
+  }
+
+  // Buying journey
+  if (q.match(/buying journey|sales cycle|deal cycle|how.*buy|procurement|buying process/)) {
+    return `<strong>Enterprise buying journey:</strong><br>1. <strong>Discovery</strong> (CX Director)  -  frames business challenges and pain<br>2. <strong>Tech Validation</strong> (CIO)  -  tests integrations and security<br>3. <strong>ROI & Pricing</strong> (CFO)  -  evaluates impact, negotiates<br>4. <strong>Procurement</strong> (Legal)  -  finalizes contracts<br><br><strong>Cycle lengths:</strong> Fast: 52 days | Typical: 75 days | Complex: 115 days`;
+  }
+
+  return null;
+}
+
+function generateBotResponse(query) {
+  // First check knowledge questions
+  const knowledgeAnswer = answerKnowledgeQuestion(query);
+  if (knowledgeAnswer) {
+    return { text: knowledgeAnswer, results: [], suggestions: getFollowUps(query) };
+  }
+
+  // Search messages
+  const results = searchMessages(query);
+
+  if (results.length === 0) {
+    return {
+      text: "I couldn't find an exact match for that. Try asking about a specific persona (e.g. \"VP CX\"), pillar (e.g. \"scaling efficiently\"), product (e.g. \"AI Agent\"), use case (e.g. \"event booth\"), or message type (e.g. \"tagline\").",
+      results: [],
+      suggestions: ["Show me event taglines", "VP CX messaging", "AI Agent value props", "Objection handlers for sales"]
+    };
+  }
+
+  // Build contextual intro
+  const intents = detectIntents(query);
+  let intro = `Found <strong>${results.length}</strong> relevant message${results.length > 1 ? 's' : ''}. Click any card to copy it.`;
+
+  return { text: intro, results, suggestions: getFollowUps(query) };
+}
+
+function getFollowUps(query) {
+  const q = query.toLowerCase();
+  const suggestions = [];
+
+  // Suggest related follow-ups based on what was asked
+  if (q.includes('event') || q.includes('booth')) {
+    suggestions.push("Sales talk tracks", "Partner co-marketing copy", "What not to say");
+  } else if (q.includes('sales') || q.includes('demo')) {
+    suggestions.push("Objection handlers", "CFO ROI messaging", "Competitive positioning");
+  } else if (q.includes('smb')) {
+    suggestions.push("Enterprise messaging", "SMB CEO value props", "SMB taglines");
+  } else if (q.includes('enterprise')) {
+    suggestions.push("SMB messaging", "CIO tech validation", "CFO ROI messaging");
+  } else if (q.includes('objection')) {
+    suggestions.push("AI accuracy concerns", "Agent replacement fears", "ROI proof points");
+  } else if (q.includes('competitor') || q.includes('zendesk') || q.includes('siena')) {
+    suggestions.push("Our differentiators", "Platform-level taglines", "What not to say");
+  } else {
+    suggestions.push("Event taglines", "Sales objection handlers", "What is Gorgias?");
+  }
+
+  return suggestions.slice(0, 3);
+}
+
+// Chat DOM and state
+let chatOpen = false;
+const chatHistory = [];
+
+function toggleChat() {
+  chatOpen = !chatOpen;
+  document.getElementById('chat-panel').classList.toggle('open', chatOpen);
+  document.getElementById('chat-fab').classList.toggle('open', chatOpen);
+  if (chatOpen) {
+    setTimeout(() => document.getElementById('chat-input').focus(), 300);
+  }
+}
+
+function addBotMessage(html) {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg bot';
+  div.innerHTML = `<div class="msg-label">Messaging Assistant</div>${html}`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function addUserMessage(text) {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg user';
+  div.textContent = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function addTypingIndicator() {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg bot';
+  div.id = 'typing-indicator';
+  div.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTypingIndicator() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+function sendChatMessage(text) {
+  if (!text || !text.trim()) return;
+
+  const input = document.getElementById('chat-input');
+  input.value = '';
+
+  addUserMessage(text);
+
+  // Show typing indicator
+  addTypingIndicator();
+
+  // Simulate brief delay for natural feel
+  setTimeout(() => {
+    removeTypingIndicator();
+    const response = generateBotResponse(text);
+    let html = response.text;
+
+    // Add result cards
+    if (response.results.length > 0) {
+      html += response.results.map(r => buildResultCard(r)).join('');
+    }
+
+    // Add follow-up suggestions
+    if (response.suggestions.length > 0) {
+      html += `<div class="chat-suggestions">${response.suggestions.map(s =>
+        `<button class="chat-suggestion" onclick="sendChatMessage('${s.replace(/'/g, "\\'")}')">${s}</button>`
+      ).join('')}</div>`;
+    }
+
+    addBotMessage(html);
+  }, 400 + Math.random() * 400);
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendChatMessage(e.target.value);
+  }
+}
+</script>
+
+<!-- Chat FAB -->
+<button class="chat-fab" id="chat-fab" onclick="toggleChat()" title="Ask the Messaging Assistant">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+  </svg>
+</button>
+
+<!-- Chat Panel -->
+<div class="chat-panel" id="chat-panel">
+  <div class="chat-header">
+    <h3>Messaging Assistant</h3>
+    <p>Ask me for approved messaging, positioning, or terminology guidance</p>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-msg bot">
+      <div class="msg-label">Messaging Assistant</div>
+      Hey! I can help you find the right messaging for any situation. Try asking me things like:
+      <div class="chat-suggestions" style="margin-top:10px">
+        <button class="chat-suggestion" onclick="sendChatMessage('Event booth taglines')">Event booth taglines</button>
+        <button class="chat-suggestion" onclick="sendChatMessage('VP CX sales messaging')">VP CX sales messaging</button>
+        <button class="chat-suggestion" onclick="sendChatMessage('What is Gorgias?')">What is Gorgias?</button>
+        <button class="chat-suggestion" onclick="sendChatMessage('Objection handlers for AI concerns')">AI objection handlers</button>
+      </div>
+    </div>
+  </div>
+  <div class="chat-input-row">
+    <input type="text" class="chat-input" id="chat-input" placeholder="Ask about messaging, personas, products..." onkeydown="handleChatKey(event)">
+    <button class="chat-send" onclick="sendChatMessage(document.getElementById('chat-input').value)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"></line>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+      </svg>
+    </button>
+  </div>
+</div>
+
+</body>
+</html>
